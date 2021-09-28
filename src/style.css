@@ -1,0 +1,107 @@
+#app {
+  display: flex;
+}
+
+#controls {
+  display: flex;
+  flex-direction: column;
+  margin-right: 20px;
+  margin-left: 10px;
+}
+
+#grid {
+  width: 100%;
+  max-width: 97vh;
+  max-height: 97vw;
+}
+
+hr {
+  color: rgb(236, 236, 236);
+}
+
+.hr-mt {
+  margin-top: 4px;
+}
+
+.hr-mb {
+  margin-bottom: 16px;
+}
+
+.text {
+  font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  color:rgb(85, 85, 85);
+}
+
+.button {
+  /*Form*/
+  min-width: 100px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  /*Spacing*/
+  border-radius: 10px;
+  margin-bottom: 10px;
+  /*Lettering*/
+  font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  /*Color*/
+  color: white;
+}
+
+.button-spacing {
+  margin-bottom: 20px;
+}
+
+.input {
+  /*Form*/
+  padding: 10px;
+  min-width: 100px;
+  /*Spacing*/
+  display: block;
+  margin-bottom: 10px;
+  /*Lettering*/
+  font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  /*Color*/
+  color: gray;
+  border: solid 1px coral;
+  border-radius: 10px;
+}
+
+textarea:focus, input:focus {
+  outline: orangered;
+}
+
+.button-active {
+  background-color: coral;
+  transition: 200ms;
+}
+
+.button-active:hover {
+  background-color: orangered;
+}
+
+.button-inactive {
+  background-color: grey;
+  transition: 200ms;
+}
+
+.row {
+  display: flex;
+}
+
+.cell {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: solid 3px white;
+}
+
+.liveCell {
+  background-color: coral;
+}
+
+.deadCell {
+  background-color: rgb(180, 194, 221);
+}
