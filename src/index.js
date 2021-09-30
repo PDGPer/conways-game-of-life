@@ -1,6 +1,26 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import ReactDOM from 'react-dom'
 import "./style.css"
+
+// Imported function to deal with possible memory 
+// leaks derived from using setInterval.
+const useInterval = (callback, delay) => {
+  const savedCallback = useRef();
+
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  useEffect(() => {
+    const tick = () => {
+      savedCallback.current();
+    }
+    if (delay !== null) {
+      let id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+};
 
 // Creates an array grid with given number of rows and columns.
 function createGrid(rowNumber, colNumber) {
@@ -14,6 +34,7 @@ function createGrid(rowNumber, colNumber) {
   for (let i = 1; i <= colNumber; i++) {
     colArray.push(rowArray)
   }
+
   return colArray
 }
 
@@ -58,20 +79,20 @@ function cellStatus(grid, colIndex, rowIndex) {
     }
 
     // If the neighbor is alive, ups the count.
-    if (grid[neighborCol][neighborRow] === true) {
+    if (grid[neighborCol][neighborRow]) {
       count++
     } 
   })
 
   // Game rules that determine cells' status.
   // First: if alive with less than two live neighbors, cell dies.
-  if (grid[colIndex][rowIndex] === true && count < 2) {
+  if (grid[colIndex][rowIndex] && count < 2) {
     return false
   // Second: if alive with 2 to 3 live neighbors, cell remains alive.
-  } else if (grid[colIndex][rowIndex] === true && count < 4) {
+  } else if (grid[colIndex][rowIndex] && count < 4) {
     return true
   // Third: if dead with 3 live neighbors, cell comes alive.
-  } else if (grid[colIndex][rowIndex] === false && count === 3) {
+  } else if (!grid[colIndex][rowIndex] && count === 3) {
     return true
   // Else, remains dead.
   } else {
@@ -117,7 +138,7 @@ const Cell = ({rowIndex, colIndex, isAlive, setGrid, isRunning}) => {
     <button 
       // Can be clicked to change its dead or alive status.
       // Disabled if the program is running.
-      onClick={isRunning? null : () => setGrid(prevGrid =>
+      onClick={isRunning ? null : () => setGrid(prevGrid =>
         // The whole grid is remapped every time this happens.
         prevGrid.map((row, newRowIndex) => 
           row.map((cell, newColIndex) => 
@@ -127,7 +148,7 @@ const Cell = ({rowIndex, colIndex, isAlive, setGrid, isRunning}) => {
         )
       )}
       // Depending on its status, it's given a different color via CSS class.
-      className={isAlive ? 'cell liveCell' : 'cell deadCell'} 
+      className={isAlive ? 'cell live-cell' : 'cell dead-cell'} 
     />
   )
 }
@@ -138,7 +159,7 @@ const Grid = ({grid, setGrid, isRunning}) => {
 
   return grid.map((row, rowIndex) => 
     <div key={rowIndex.toString()} className='row'>
-      {row.map((cell, colIndex) => 
+      {row.map((_, colIndex) => 
         <Cell 
           key={rowIndex.toString() + colIndex.toString()} 
           isAlive={grid[rowIndex][colIndex]} 
@@ -155,7 +176,7 @@ const Grid = ({grid, setGrid, isRunning}) => {
 // The controls available to the user (start, stop, grid size, speed).
 // All controls beside speed change are disabled while grid is active,
 // to avoid complications.
-const Controls = ({isRunning, toggleRunning, grid, setGrid, setUpdateInterval, setColNum, setRowNum}) => {
+const Controls = ({isRunning, toggleRunning, grid, setGrid, setUpdateInterval, setColNum, setRowNum, generationCount, setGenerationCount}) => {
 
   // The controls have a second, internal state for the user's desired number
   // of rows, columns and update speed. These values only get sent to the App
@@ -209,15 +230,21 @@ const Controls = ({isRunning, toggleRunning, grid, setGrid, setUpdateInterval, s
     setColNum(setDesiredColumns(cols))
     setRowNum(setDesiredRows(rows))
     setGrid(createGrid(cols, rows))
+    setGenerationCount(0)
   }
 
   return (
     <div id='controls'>
-      <form onSubmit={handleSubmit}>
-        <hr className='hr-mt'></hr>
+      <hr className='hr-mt'></hr>
 
+      {/*Number of generations that have gone by*/}
+      <p>Generation: {generationCount}</p>
+
+      <hr></hr>
+
+      <form onSubmit={handleSubmit}>
         {/*User input for number of rows*/}
-        <p className='text'>Grid rows (3-50)</p>
+        <p>Grid rows (3-50)</p>
         <input
           className='input'
           type='number'
@@ -225,7 +252,7 @@ const Controls = ({isRunning, toggleRunning, grid, setGrid, setUpdateInterval, s
           onChange={handleDesiredRows}
         ></input>
         {/*User input for number of columns*/}
-        <p className='text'>Grid columns (3-50)</p>
+        <p>Grid columns (3-50)</p>
         <input
           className='input'
           type='number'
@@ -234,14 +261,14 @@ const Controls = ({isRunning, toggleRunning, grid, setGrid, setUpdateInterval, s
         ></input>
         {/*Grid size change button*/}
         <button 
-          className={isRunning? 'button button-inactive' : 'button button-active'}
-          onClick={isRunning? null : () => handleGridChange(desiredColumns, desiredRows)}
+          className={isRunning ? 'button button-inactive' : 'button button-active'}
+          onClick={isRunning ? null : () => handleGridChange(desiredColumns, desiredRows)}
         >Change grid</button>
 
         <hr></hr>
 
         {/*User input for grid update speed*/}
-        <p className='text'>Speed (100-1000 milliseconds)</p>
+        <p>Speed (100-1000 milliseconds)</p>
         <input
           className='input'
           type='number'
@@ -260,19 +287,22 @@ const Controls = ({isRunning, toggleRunning, grid, setGrid, setUpdateInterval, s
       {/*Starts / Pauses the App*/}
       <button 
         className='button button-active'
-        onClick={() => toggleRunning()}>{isRunning? 'Pause' : 'Start'}
+        onClick={() => toggleRunning()}>{isRunning ? 'Pause' : 'Start'}
       </button>
 
       {/*Resets the grid*/}
       <button 
-        className={isRunning? 'button button-inactive' : 'button button-active'}
-        onClick={() => isRunning? null : handleGridChange(desiredColumns, desiredRows)}
+        className={isRunning ? 'button button-inactive' : 'button button-active'}
+        onClick={() => isRunning ? null : handleGridChange(desiredColumns, desiredRows)}
       >Reset</button>
 
       {/*Randomizes the grid*/}
       <button
-        className={isRunning? 'button button-inactive' : 'button button-active'}
-        onClick={isRunning? null : () => setGrid(randomizeCellStatus(grid))}
+        className={isRunning ? 'button button-inactive' : 'button button-active'}
+        onClick={isRunning ? null : () => {
+          setGrid(randomizeCellStatus(grid))
+          setGenerationCount(0)
+        }}
       >Randomize</button>
     </div>
   )
@@ -283,8 +313,12 @@ const App = () => {
   const [colNum, setColNum] = useState(11)
   const [rowNum, setRowNum] = useState(11)
 
-  // Creates a new stateful custom array grid.
-  const [grid, setGrid] = useState(createGrid(colNum, rowNum))
+  // Counter for the numbers of cell generations that have gone by.
+  const [generationCount, setGenerationCount] = useState(0)
+
+  // State for the grid. Its first iteration is a randomized
+  // grid for the first render.
+  const [grid, setGrid] = useState(randomizeCellStatus(createGrid(colNum, rowNum)))
 
   // Holds a stringified version of the current grid
   // right before updating, so they can be later compared.
@@ -292,27 +326,28 @@ const App = () => {
   const nextGrid = updateGrid(grid)
 
   // Current running or paused state of the app.
-  const [isRunning, setRunning] = useState(false)
+  const [isRunning, setRunning] = useState(true)
 
   // State for the speed at which the grid is updated.
   const [updateInterval, setUpdateInterval] = useState(200)
 
   // Toggles the running state to start or pause.
   const toggleRunning = () => {
-    setRunning(!isRunning)
+    setRunning(prevState => !prevState)
   }
 
   // If the next grid is identical to the previous one 
   // (meaning no new changes will happen), the simulation is halted.
-  if (isRunning === true && previousGrid === JSON.stringify(nextGrid)) {
+  if (isRunning && previousGrid === JSON.stringify(nextGrid)) {
     toggleRunning()
   }
 
   // If the application is running, orders a grid update
   // after the given time runs out.
-  if (isRunning === true) {
-    setTimeout(() => {setGrid(nextGrid)}, updateInterval)
-  }
+  useInterval(() => {if (isRunning) {
+    setGrid(nextGrid)
+    setGenerationCount(generationCount + 1)
+  }}, updateInterval)
 
   return (
     <div id='app'>
@@ -326,6 +361,8 @@ const App = () => {
         rowNum={rowNum}
         setColNum={setColNum}
         setRowNum={setRowNum}
+        generationCount={generationCount}
+        setGenerationCount={setGenerationCount}
       />
       <div id='grid'>
         <Grid

@@ -1,10 +1,10 @@
 # Conway's Game of Life, built in React
 
-[Click here to see it live.](https://conways-game-of-life-9w613qm8d-pdgper.vercel.app/)
+[Click here to see it live.](https://conways-game-of-life-henna.vercel.app/)
 
-I've been learning my way around frontend web development and this was suggested to me as a challenge. It was the first thing I built from scratch using React and I learned a lot. Part of freeCodeCamp's [Take Home Projects](https://www.freecodecamp.org/learn/coding-interview-prep/take-home-projects/build-the-game-of-life)
+I've been learning my way around frontend web development and this was suggested to me as a challenge. It was the first thing I built from scratch using React and I learned a lot about information flow, setState hooks and some of the dangers around certain functions and memory leaks. Part of freeCodeCamp's [Take Home Projects.](https://www.freecodecamp.org/learn/coding-interview-prep/take-home-projects/build-the-game-of-life)
 
-Besides the required user stories, I also wanted my game to have the option to change the board size, speed of the game and randomize the board.
+Besides the required user stories, I also wanted my game to have the option to change the board's size, randomize the status of the cells and change the generation speed.
 
 More about me and my work at [pdgper.com](http://pdgper.com/)
 
